@@ -1,0 +1,189 @@
+
+
+icon.aberta <- makeAwesomeIcon(icon='',markerColor = 'red',
+                               library='ion')
+icon.leader <- makeAwesomeIcon(icon='',markerColor = 'orange',
+                               library='ion')
+icon.fechada <- makeAwesomeIcon(icon='',markerColor = 'gray',
+                                library='ion')
+
+icon.aberta <- makeAwesomeIcon(icon='',markerColor = 'red',
+                               library='ion')
+icon.leader <- makeAwesomeIcon(icon='',markerColor = 'orange',
+                               library='ion')
+icon.fechada <- makeAwesomeIcon(icon='',markerColor = 'gray',
+                                library='ion')
+
+
+popIcons <- awesomeIconList(
+                aberta = makeAwesomeIcon(icon='', library='glyphicon', markerColor = 'blue'),
+                fechada = makeAwesomeIcon(icon='users', library='fa', markerColor = 'red'))
+
+leaflet() %>% addTiles() %>%
+  addAwesomeMarkers(
+    lng=-118.456554, lat=34.078039,
+    label='This is a label',
+    icon = icon.leader)
+
+
+m_seller_limpo<-leaflet(data = lojas_seller_limpo) %>% addTiles() %>%
+  addMarkers(~lon, ~lat, label = ~as.character(Nº)
+  )
+
+
+library(htmlwidgets)
+saveWidget(m_seller_limpo, file="testmap.html", selfcontained = TRUE)
+
+# Colocando nomes nas lojas:
+  # Transformando a variável da base de apoio em string tb:
+    nomes_seller$LOJA_NUMERO<-toString(nomes_seller$LOJA_NUMERO)
+    which(nomes_seller$LOJA_NUMERO==650)
+
+
+  lojas_seller_limpo[lojas_seller_limpo$Nº %in%
+                       nomes_seller$LOJA_NUMERO,'Nome']<-nomes_seller[nomes_seller$LOJA_NUMERO %in%
+                                                                        lojas_seller_limpo$Nº,'NOME']
+  paste0(lojas_seller_limpo$Nome,' (',
+         lojas_seller_limpo$Nº,')')
+  
+  # Lojas sem nome:
+    lojas_seller_limpo[which(is.na(lojas_seller_limpo$Nome)),
+                       'Nº']
+    lojas_seller_limpo_semnome<-lojas_seller_limpo[which(is.na(lojas_seller_limpo$Nome)),]
+    lojas_seller_limpo_semnome[lojas_seller_limpo_semnome$Nº %in%
+                                 enderecos$Nº,'Nome']<-enderecos[enderecos$Nº %in%
+                                                                lojas_seller_limpo_semnome$Nº,'LOJA']
+    # Colocando nomes certos:
+      lojas_seller_limpo[lojas_seller_limpo$Nº %in%
+                           nomes_seller$LOJA_NUMERO,
+                         'Nome']<-nomes_seller[nomes_seller$LOJA_NUMERO %in% 
+                                                 lojas_seller_limpo$Nº,'NOME']
+    # Colocando alguns nomes na mão:
+      lojas_seller_limpo[which(lojas_seller_limpo$Nº==667),'Nome']<-'Sorocaba'
+      lojas_seller_limpo[which(lojas_seller_limpo$Nº==668),'Nome']<-'Shopping Plaza Limeira'
+      lojas_seller_limpo[which(lojas_seller_limpo$Nº==673),'Nome']<-'Hortolândia Mall'
+
+      
+      
+# Criando uma nova coluna:
+      lojas_seller_limpo$Etiqueta_mapa<-paste0(lojas_seller_limpo$Nome,
+                                               ' (',
+                                               lojas_seller_limpo$Nº,
+                                               ')')
+      
+# O total de lojas Seller é 75, faltam 4 lojas.
+# Identificando lojas fechadas:
+  nrow(nomes_seller) # 75
+  nomes_seller$Ja_tenho<-0
+  
+  nomes_seller[nomes_seller$LOJA_NUMERO %in%
+                 lojas_seller_limpo$Nº,'Ja_tenho']<-1
+  
+  data.frame(count(nomes_seller,Ja_tenho))
+    # Ja_tenho  n
+    # 1        0  4
+    # 2        1 71
+ nao_tenho_seller<-nomes_seller[which(nomes_seller$Ja_tenho==0),]
+ # LOJA_NUMERO                 NOME Ja_tenho
+ # 2          663     Campinas Estação        0
+ # 12         678 Parque das Bandeiras        0
+ # 38         656         Pirassununga        0
+ # 72         717 Santa Bárbara Pérola        0
+
+ # Colocando Status:
+   nao_tenho_seller$Status<-c('fechada',
+                              'fechada',
+                              'aberta',
+                              'aberta')
+ # Colocando UF:
+    nao_tenho_seller$UF<-c('SP',
+                           'SP',
+                           'SP',
+                           'SP')
+ 
+mapa_seller_bonzao<-leaflet(data = lojas_seller_limpo) %>% addTiles() %>%
+                            addAwesomeMarkers(lng=lojas_seller_limpo[which(lojas_seller_limpo$Status=='aberta'),'lon'],
+                                              lat=lojas_seller_limpo[which(lojas_seller_limpo$Status=='aberta'),'lat'],
+                                              label = as.character(lojas_seller_limpo[which(lojas_seller_limpo$Status=='aberta'),
+                                                                                      'Etiqueta_mapa']),
+                                              icon=icon.aberta) %>%
+                            addAwesomeMarkers(lng=lojas_seller_limpo[which(lojas_seller_limpo$Status=='fechada'),'lon'],
+                                              lat=lojas_seller_limpo[which(lojas_seller_limpo$Status=='fechada'),'lat'],
+                                              label = as.character(lojas_seller_limpo[which(lojas_seller_limpo$Status=='fechada'),
+                                                                                      'Etiqueta_mapa']),
+                                              icon=icon.fechada) %>%
+                            addAwesomeMarkers(lng=lojas_seller_limpo[which(lojas_seller_limpo$Status=='leader'),'lon'],
+                                              lat=lojas_seller_limpo[which(lojas_seller_limpo$Status=='leader'),'lat'],
+                                              label = as.character(lojas_seller_limpo[which(lojas_seller_limpo$Status=='leader'),
+                                                                                      'Etiqueta_mapa']),
+                                              icon=icon.leader) %>%
+                            addLegend("bottomright", 
+                                      colors =c("red","gray","orange"),
+                                      labels= c("aberta","fechada","será Leader"),
+                                      title= "Status",
+                                      opacity = 1)
+
+# Marcando lojas que virão Leader:
+  seller_leader<-c('654','655','657','676')
+  class(seller_leader)
+  str(lojas_seller_limpo)
+
+  lojas_seller_limpo$Status<-levels(lojas_seller_limpo$Status)[lojas_seller_limpo$Status]
+  lojas_seller_limpo$Nº<-levels(lojas_seller_limpo$Nº)[lojas_seller_limpo$Nº]
+  
+  
+  
+  lojas_seller_limpo$Status[which(lojas_seller_limpo$Nº %in%
+                                    seller_leader)]<-'leader'
+  
+  library(devtools)
+  install_github('rstudio/leaflet')
+  library(htmlwidgets)
+  library(leaflet)
+  setwd('C:/Users/gboni/Desktop/Pri/Projetos R/Mapa regionais/Mapa regionais/Mapa_regionais')
+  saveWidget(mapa_seller_bonzao, file="Mapa_Seller_Status.html", selfcontained = TRUE)
+
+ ######################################################################################
+
+# Mapa lojas Rio de Janeiro
+    m_rj_rj<-leaflet(data = lojas_rj_rj) %>% addTiles() %>%
+    addMarkers(~lon, ~lat, label = ~as.character(LOJA)
+    )
+
+# Atualizando Seller:
+  lojas_seller_limpo[which(lojas_seller_limpo$Nº==705),'Status']<-'fechada'
+  lojas_seller_limpo[which(lojas_seller_limpo$Nº==709),'Status']<-'fechada'
+  lojas_seller_limpo
+  lojas_seller_limpo$Nome
+  lojas_seller_limpo[which(lojas_seller_limpo$Nº==705),'Nome']<-'Dourados'
+  lojas_seller_limpo[which(lojas_seller_limpo$Nº==709),'Nome']<-'Campo Grande Centro'
+  
+  mapa_seller_bonzao<-leaflet(data = lojas_seller_limpo) %>% addTiles() %>%
+    addAwesomeMarkers(lng=lojas_seller_limpo[which(lojas_seller_limpo$Status=='aberta'),'lon'],
+                      lat=lojas_seller_limpo[which(lojas_seller_limpo$Status=='aberta'),'lat'],
+                      label = as.character(lojas_seller_limpo[which(lojas_seller_limpo$Status=='aberta'),'Nº']),
+                      icon=icon.aberta) %>%
+    addAwesomeMarkers(lng=lojas_seller_limpo[which(lojas_seller_limpo$Status=='fechada'),'lon'],
+                      lat=lojas_seller_limpo[which(lojas_seller_limpo$Status=='fechada'),'lat'],
+                      label = as.character(lojas_seller_limpo[which(lojas_seller_limpo$Status=='fechada'),'Nº']),
+                      icon=icon.fechada) %>%
+    addAwesomeMarkers(lng=lojas_seller_limpo[which(lojas_seller_limpo$Status=='leader'),'lon'],
+                      lat=lojas_seller_limpo[which(lojas_seller_limpo$Status=='leader'),'lat'],
+                      label = as.character(lojas_seller_limpo[which(lojas_seller_limpo$Status=='leader'),'Nº']),
+                      icon=icon.leader) %>%
+    addLegend("bottomright", 
+              colors =c("red","gray","orange"),
+              labels= c("aberta","fechada","será Leader"),
+              title= "Status",
+              opacity = 1)
+
+
+  
+  
+  library(rgdal)
+  
+  # From http://data.okfn.org/data/datasets/geo-boundaries-world-110m
+  countries <- readOGR("json/countries.geojson", "OGRGeoJSON")
+  
+  
+  

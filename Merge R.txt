@@ -1,0 +1,13 @@
+An inner join of df1 and df2:
+Return only the rows in which the left table have matching keys in the right table.
+
+An outer join of df1 and df2:
+Returns all rows from both tables, join records from the left which have matching keys in the right table.
+
+A left outer join (or simply left join) of df1 and df2
+Return all rows from the left table, and any rows with matching keys from the right table.
+
+A right outer join of df1 and df2
+Return all rows from the right table, and any rows with matching keys from the left table.
+
+Inner join: merge(df1, df2) will work for these examples because R automatically joins the frames by common variable names, but you would most likely want to specify merge(df1, df2, by = "CustomerId") to make sure that you were matching on only the fields you desired. You can also use the by.x and by.y parameters if the matching variables have different names in the different data frames.

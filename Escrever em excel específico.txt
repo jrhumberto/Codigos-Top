@@ -1,0 +1,10 @@
+library(XLConnect)
+wb <- loadWorkbook("File_result.xlsx"), create = TRUE)
+createSheet(wb, name = "Sheet1")
+
+# here, you can set the startRow and startCol. Col A = 1, B = 2,...
+writeWorksheet(wb,x,"Sheet1",startRow = 10, startCol = 3, header = TRUE)
+
+# automatically adjust column width
+setColumnWidth(wb, sheet = "Sheet1", column = 3:4, width = -1)
+saveWorkbook(wb)

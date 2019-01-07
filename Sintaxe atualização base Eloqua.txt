@@ -1,0 +1,143 @@
+﻿
+
+
+COMPUTE
+   LOJA_CADASTRO=num_loja_cadastro_visa.
+EXECUTE.
+if sysmis (num_loja_cadastro_visa) LOJA_CADASTRO=num_loja_cadastro_pl.
+execute.
+
+STRING Source (A11).
+   COMPUTE
+      Source =  "201811_".
+   EXECUTE.
+
+STRING Source_Visa (A11).
+   COMPUTE
+      Source_Visa =  CONCAT(Source,"Visa").
+   EXECUTE.
+
+STRING Source_PL (A11).
+   COMPUTE
+      Source_PL =  CONCAT(Source,"PL").
+   EXECUTE.
+
+* Errado
+IF (ind_clientes_aptos_pl=1) Source=Source_PL.
+*IF (ind_clientes_aptos_pl=0 and ind_clientes_aptos_visa=1) Source=Source_Visa.
+*EXECUTE.
+
+
+* Certo.
+IF (ind_clientes_aptos_visa=1) Source=Source_Visa.
+EXECUTE.
+IF (ind_clientes_aptos_visa=0 and ind_clientes_aptos_pl=1) Source=Source_PL.
+EXECUTE.
+
+
+*** Filtrando clientes ***.
+FILTER OFF. 
+USE ALL. 
+SELECT IF (grupo_acao_controle="GA" and 
+                  ind_clientes_aptos_pl_ou_visa=1 and
+                  ind_possui_email_princ=1 and
+                  ind_blacklist=0). 
+EXECUTE. 
+
+
+*** Filtrando clientes ***.
+FILTER OFF. 
+USE ALL. 
+SELECT IF (ind_clientes_aptos_pl_ou_visa=1 and
+                  ind_possui_email_princ=1 and
+                  ind_blacklist=0). 
+EXECUTE. 
+
+
+RENAME VARIABLES  
+ ind_bandeira_leader = LEADER.
+EXECUTE.
+
+COMPUTE 
+     LOJA_COMPRA=num_loja_6_meses.
+EXECUTE.
+if sysmis(LOJA_COMPRA) LOJA_COMPRA=LOJA_CADASTRO.
+execute.
+
+
+DELETE VARIABLES
+   num_seq_ano_mes
+   CPF_CLIENTE
+   e_mail_pl
+   e_mail_visa
+   ddd_telefone_celular_pl
+   telefone_celular_pl
+   ddd_telefone_celular_visa
+   telefone_celular_visa
+   ddd_telefone_celular_principal
+   telefone_celular_principal
+   ddd_telefone_fixo_pl
+   telefone_fixo_pl
+   ddd_telefone_fixo_visa
+   telefone_fixo_visa
+   ddd_telefone_fixo_principal
+   telefone_fixo_principal
+   endereco_pl
+   endereco_visa
+   endereco_principal
+   num_loja_cadastro_pl
+   num_loja_cadastro_visa
+   num_recencia_pl
+   num_recencia_visa
+   num_recencia_pl_visa
+   grupo_acao_controle
+   num_loja_6_meses
+   ind_migrado
+   ind_blacklist
+   ind_bandeira_seller
+   ind_modalidade_pl
+   ind_modalidade_visa
+   ind_clientes_aptos_pl
+   ind_clientes_aptos_visa
+   ind_clientes_aptos_pl_ou_visa
+   ind_ativou_pl
+   ind_ativou_visa
+   num_seq_data_carga_dw
+   num_seq_dat_cadastro_pl
+   num_seq_dat_cadastro_visa
+   nom_bairro_pl
+   nom_bairro_visa
+   nom_bairro_principal
+   num_cep_pl
+   num_cep_visa
+   num_cep_principal
+   nom_cidade_pl
+   nom_cidade_visa
+   nom_cidade_principal
+   cod_uf_pl
+   cod_uf_visa
+   ind_possui_email_pl
+   ind_possui_email_visa
+   ind_possui_email_princ
+   ind_possui_celular_pl
+   ind_possui_celular_visa
+   ind_possui_celular_princ
+   ind_possui_end_compl_pl
+   ind_possui_end_compl_visa
+   ind_possui_tel_fixo_pl
+   ind_possui_tel_fixo_visa
+   ind_possui_tel_fixo_princ
+   ind_situacao_normal_pl
+   ind_situacao_normal_visa
+   SELLER_PL_COMUNICAR
+   SELLER_VISA_COMUNICAR
+   REC12PL_VISA
+   FX_REC_PL
+   FX_REC_VISA
+   Source_Visa
+   Source_PL.
+EXECUTE.
+
+RENAME VARIABLES
+   cod_uf_principal = UF_loja.
+EXECUTE.

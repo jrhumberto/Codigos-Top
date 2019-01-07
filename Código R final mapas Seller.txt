@@ -1,0 +1,338 @@
+# # # # # # # # # # # # # # # # # # # # # # 
+#                                         #
+#       Job - mapa lojas Seller           #
+#                                         #
+# # # # # # # # # # # # # # # # # # # # # # 
+
+# Carregando pacotes:
+  pacotes <- c("data.table",
+               "dplyr",
+               "stringr",
+               "lubridate",
+               "ggplot2",
+               "ggmap")
+  lapply(X = pacotes, FUN = require, character.only = TRUE)
+  
+# Conferindo as informações que já possuo:
+  length(which(enderecos_limpo$Nº>500)) # 64 lojas Seller
+  nrow(lojas_seller_limpo) # 71
+  data.frame(count(lojas_seller_limpo,Status))
+  #    Status  n
+  # 1  aberta 17
+  # 2 fechada 50
+  # 3  leader  4
+  
+  
+  lojas_ico<-lojas_seller_limpo
+  lojas_ico[which(lojas_ico$Status=='aberta'),'Status']<-'tipo A'
+  lojas_ico[which(lojas_ico$Status=='fechada'),'Status']<-'tipo F'
+  lojas_ico[which(lojas_ico$Status=='leader'),'Status']<-'tipo L'
+  
+  data.frame(count(lojas_ico,Status))
+    # Status  n
+    # 1 tipo A 17
+    # 2 tipo F 50
+    # 3 tipo L  4
+  
+  
+# Já sei que os nomes estão errados!
+  
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Objetivos: corrigir nomes (estão errados),
+#            corrigir possíveis endereços errados
+#            ter a totalidade de lojas Seller no mapa (75)
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #  
+
+# Lendo as infos completas:
+  setwd('C:/Users/gboni/Desktop/Pri/Projetos R/Mapa lojas/Mapa lojas (S+L)')
+  library(readxl)
+  infos_robson<-as.data.frame(read_excel('Endereços lojas Robson.xlsx',
+                           sheet='Plan1'))
+  head(infos_robson)
+  infos_robson$Número<-format(infos_robson$Número,scientific = F)
+  
+# Jogando o que já tenho para esta base:
+  seller_full<-infos_robson[which(infos_robson$Número>=500),]
+  nrow(seller_full) # 75 ok!
+  
+  seller_full$Número<-format(seller_full$Número,scientific = F)
+  
+# # # # # # # # # # # # Juntando # # # # # # # # # # # # # # # # 
+  
+  teste<-merge(x = seller_full,
+               y = lojas_seller_limpo,
+               by = "Nº",
+               all.x = T)
+  nrow(teste) # 75 ! yay!!
+  lojas_seller_certo<-teste
+  nrow(lojas_seller_certo)
+  head(lojas_seller_certo)
+  
+# Retirar variáveis desnecessárias
+  names(lojas_seller_certo)
+  lojas_seller_certo<-lojas_seller_certo[,-c(8,9,10)]
+  
+# Renomeando algumas:
+  names(lojas_seller_certo)[2]<-'Nome'
+  names(lojas_seller_certo)[5]<-'UF'
+  names(lojas_seller_certo)[6]<-'Cidade'
+  
+# # # Consertando Status # # #
+  count(lojas_seller_certo,Status)
+  lojas_seller_certo[which(is.na(lojas_seller_certo$Status)),'Status']<-'fechada'
+  
+# # # Através do views, comparei os endereços no olho.
+#     vou corrigir os endereços errados e colocar os inexistentes
+  # # Colocando os lat long:  
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='656'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='656'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='656'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='656'),'lon']<- -47.42713
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='656'),'lat']<- -21.99823
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='663'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='663'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='663'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='663'),'lon']<- -47.06638
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='663'),'lat']<- -22.90789
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='678'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='678'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='678'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='678'),'lon']<- -47.12723
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='678'),'lat']<- -22.92544
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='717'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='717'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='717'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='717'),'lon']<- -47.37126
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='717'),'lat']<- -22.73967
+      
+# Colocando lat long com endereços corretos (lojas que já tinha, porém com informações erradas)
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='670'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='670'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='670'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='670'),'lon']<- -47.06085
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='670'),'lat']<- -22.90793
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='677'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='677'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='677'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='677'),'lon']<- -47.3855
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='677'),'lat']<- -22.53239
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='681'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='681'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='681'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='681'),'lon']<- -46.5291
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='681'),'lat']<- -23.4782
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='684'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='684'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='684'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='684'),'lon']<- -45.55493
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='684'),'lat']<- -23.02821
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='685'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='685'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='685'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='685'),'lon']<- -45.55517
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='685'),'lat']<- -23.02616
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='693'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='693'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='693'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='693'),'lon']<- -46.36644
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='693'),'lat']<- -20.2472
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='700'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='700'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='700'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='700'),'lon']<- -47.40033
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='700'),'lat']<- -20.53565
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='702'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='702'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='702'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='702'),'lon']<- -47.81113
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='702'),'lat']<- -21.17311
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='703'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='703'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='703'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='703'),'lon']<- -47.80921
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='703'),'lat']<- -21.17669
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='714'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='714'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='714'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='714'),'lon']<- -51.38988
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='714'),'lat']<- -22.13123
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='715'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='715'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='715'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='715'),'lon']<- -47.33174
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='715'),'lat']<- -22.73361
+      
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='721'),]
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='721'),'Endereço']
+      geocode(lojas_seller_certo[which(lojas_seller_certo$Nº=='721'),'Endereço'])
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='721'),'lon']<- -47.41408
+      lojas_seller_certo[which(lojas_seller_certo$Nº=='721'),'lat']<- -22.75592
+
+# Verificar, através de "status leader" se tá tudo certo mesmo ok!! <3
+      
+# Criando etiqueta mapa:
+  lojas_seller_certo$Etiqueta_mapa<-paste0(lojas_seller_certo$Nome, 
+                                               ' (',
+                                               lojas_seller_certo$Nº,
+                                               ')')
+
+  head(lojas_seller_certo)
+
+# # # # Fazendo o mapa! # # # #
+  library(leaflet)
+  
+  mapa_bonzao_final<-leaflet(data = lojas_ico) %>% addTiles() %>%
+        addAwesomeMarkers(lng=lojas_ico[which(lojas_ico$Status=='tipo A'),'lon'],
+                          lat=lojas_ico[which(lojas_ico$Status=='tipo A'),'lat'],
+                          label = as.character(lojas_ico[which(lojas_ico$Status=='tipo A'),
+                                                                  'Etiqueta_mapa']),
+                          icon=icon.tipoA) %>%
+        addAwesomeMarkers(lng=lojas_ico[which(lojas_ico$Status=='tipo F'),'lon'],
+                          lat=lojas_ico[which(lojas_ico$Status=='tipo F'),'lat'],
+                          label = as.character(lojas_ico[which(lojas_ico$Status=='tipo F'),
+                                                                  'Etiqueta_mapa']),
+                          icon=icon.tipoF) %>%
+        addAwesomeMarkers(lng=lojas_ico[which(lojas_ico$Status=='tipo L'),'lon'],
+                          lat=lojas_ico[which(lojas_ico$Status=='tipo L'),'lat'],
+                          label = as.character(lojas_ico[which(lojas_ico$Status=='tipo L'),
+                                                                  'Etiqueta_mapa']),
+                          icon=icon.tipoL) %>%
+        addLegend("bottomright", 
+                  colors =c("red","gray","orange"),
+                  labels= c("tipo A","tipo F","tipo L"),
+                  title= "Status",
+                  opacity = 1)
+
+  library(htmlwidgets)
+  setwd('C:/Users/gboni/Desktop/Pri/Projetos R/Mapa Seller')
+  saveWidget(mapa_bonzao_final, file="Mapa_Lojas_Rladies.html", selfcontained = TRUE)
+  
+  data.frame(count(lojas_ico,Status))
+  #    Status  n
+  # 1  aberta 17
+  # 2 fechada 54
+  # 3  leader  4
+  
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # Mapa estático # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+  
+# Fazendo o mapa.
+  # Definindo centro do mapa:
+    coord_seller_certo<-data.frame('lon'=lojas_seller_certo$lon,
+                                   'lat'=lojas_seller_certo$lat)
+    centro_seller_certo<-colMeans(coord_seller_certo)
+  
+  # Com todas as lojas:
+    map_seller_certo <- get_googlemap(center = centro, zoom = 5, maptype = "roadmap",
+                                      markers = data.frame(coord_seller_certo))
+    plot(map_seller_certo)  
+  
+  # Colocando as lojas depois:
+    map1_seller_certo <- get_googlemap(center = centro_seller_certo, zoom = 5, maptype = "roadmap")
+    plot(map1_seller_certo)
+  
+    mapa_c_seller_certo <- ggmap(map1_seller_certo, extent = "device")  +
+      geom_point(aes(x = lon, y = lat, color=Status), 
+                 data = lojas_seller_certo, pch=18,
+                 size = I(4))+
+      scale_color_manual(values=c('#FF0000','#4d4851','#ff9032'))
+    
+    plot(mapa_c_seller_certo)
+  
+  # geom_text(data = lojas_seller_certo, 
+  #                           aes(x = lon, y = lat+1, label = Nº), size = 3)
+  
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+  # Diferenciando entre estados:
+  data.frame(count(lojas_seller_certo,UF))
+  # UF  n
+  # 1 MG  1
+  # 2 MS  5
+  # 3 SP 21
+  
+  # após corrigir:
+    # UF  n
+    # 1 MG  2
+    # 2 MS  5
+    # 3 SP 68
+
+  lojas_seller_certo_MS<-lojas_seller_certo[which(lojas_seller_certo$UF=='MS' | lojas_seller_certo$Nº=='711'),]
+  lojas_seller_certo_SP_MG<-lojas_seller_certo[which(lojas_seller_certo$UF!='MS' & lojas_seller_certo$Nº!='711'),]
+  
+  # Fazendo o mapa.
+  # Definindo centro do mapa:
+  # MS
+  coord_seller_certo_MS<-data.frame('lon'=lojas_seller_certo_MS$lon,
+                                    'lat'=lojas_seller_certo_MS$lat)
+  centro_seller_certo_MS<-colMeans(coord_seller_certo_MS)
+  
+  # Com todas as lojas:
+  map_seller_certo_MS <- get_googlemap(center = centro_seller_certo_MS, zoom = 7, maptype = "roadmap",
+                                       markers = data.frame(coord_seller_certo_MS))
+  plot(map_seller_certo_MS)  
+  
+  # Colocando as lojas depois:
+  map1_seller_certo_MS <- get_googlemap(center = centro_seller_certo_MS, zoom = 7, maptype = "roadmap")
+  plot(map1_seller_certo_MS)
+  
+  mapa_c_seller_certo_MS <- ggmap(map1_seller_certo_MS, extent = "device")  +
+    geom_point(aes(x = lon, y = lat, color=Status), 
+               data = lojas_seller_certo_MS, pch=18,
+               size = I(5))+
+    scale_color_manual(values=c('#FF0000','#4d4851','#ff9032'))#+
+  # geom_text(data = lojas_seller_certo_MS,
+  #           aes(x = lon+0.2, y = lat+0.2, label = Nº),
+  #           size = 5)
+  
+  
+  plot(mapa_c_seller_certo_MS)
+  
+  # geom_text(data = lojas_seller_certo_MS, aes(x = lon, y = lat+0.3, label = Nº),
+  # size = 4)
+  
+  # SP_MG
+  coord_seller_certo_SP_MG<-data.frame('lon'=lojas_seller_certo_SP_MG$lon,
+                                       'lat'=lojas_seller_certo_SP_MG$lat)
+  centro_seller_certo_SP_MG<-colMeans(coord_seller_certo_SP_MG)
+  
+  # Com todas as lojas:
+  map_seller_certo_SP_MG <- get_googlemap(center = centro_seller_certo_SP_MG, zoom = 7, maptype = "roadmap",
+                                          markers = data.frame(coord_seller_certo_SP_MG))
+  plot(map_seller_certo_SP_MG)  
+  
+  # Colocando as lojas depois:
+  map1_seller_certo_SP_MG <- get_googlemap(center = centro_seller_certo_SP_MG, zoom = 7, maptype = "roadmap")
+  plot(map1_seller_certo_SP_MG)
+  
+  mapa_c_seller_certo_SP_MG <- ggmap(map1_seller_certo_SP_MG, extent = "device")  +
+    geom_point(aes(x = lon, y = lat, color=Status), 
+               data = lojas_seller_certo_SP_MG, pch=18,
+               size = I(5))+
+    scale_color_manual(values=c('#FF0000','#4d4851','#ff9032'))+
+  geom_text(data = lojas_seller_certo_SP_MG,
+            aes(x = lon+0.2, y = lat+0.2, label = Nº),
+            size = 5)
+  
+  
+  plot(mapa_c_seller_certo_SP_MG)  
+  
+  # geom_text(data = lojas_seller_certo_SP_MG, 
+  #                                 aes(x = lon+0.2, y = lat+0.2, label = Nº),
+  #                            
+  
